@@ -1,7 +1,5 @@
 # gui/main_window.py
 
-from datetime import datetime
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -18,17 +16,39 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QFileDialog,
     QMessageBox,
+    QInputDialog,
     QFrame
 )
 
+# Import our custom GUI component.
 from gui.rune_card import RuneCard
+
+# Import application managers.
 from utils.formula_manager import FormulaManager
+from utils.history_manager import HistoryManager
+from utils.saved_formula_manager import SavedFormulaManager
 
 
 class RuneGeneratorWindow(QMainWindow):
+    """
+    Main window for the Elder Futhark Rune Formula Generator.
+
+    Responsibilities:
+        - Display the GUI.
+        - Generate rune formulas.
+        - Display rune cards.
+        - Copy formulas.
+        - Export formulas to TXT files.
+        - Save formulas permanently to JSON.
+        - Display session history.
+    """
 
     def __init__(self):
         super().__init__()
+
+        # ----------------------------------------------------
+        # WINDOW SETTINGS
+        # ----------------------------------------------------
 
         self.setWindowTitle(
             "Elder Futhark Rune Formula Generator"
@@ -39,15 +59,25 @@ class RuneGeneratorWindow(QMainWindow):
             800
         )
 
-        # Currently generated rune formula.
+        # ----------------------------------------------------
+        # CURRENT FORMULA
+        # ----------------------------------------------------
+
+        # Stores the currently generated runes.
         self.current_runes = []
 
-        # Stores formulas generated during
-        # the current application session.
-        self.formula_history = []
+        # ----------------------------------------------------
+        # MANAGERS
+        # ----------------------------------------------------
 
+        # Handles formulas generated during this session.
+        self.history_manager = HistoryManager()
+
+        # Handles formulas permanently stored in JSON.
+        self.saved_formula_manager = SavedFormulaManager()
+
+        # Build the interface.
         self.setup_ui()
-        self.apply_styles()
 
 
     # ========================================================
@@ -56,8 +86,10 @@ class RuneGeneratorWindow(QMainWindow):
 
     def setup_ui(self):
 
+        # Central widget required by QMainWindow.
         central_widget = QWidget()
 
+        # Main vertical layout.
         main_layout = QVBoxLayout()
 
         main_layout.setContentsMargins(
@@ -71,9 +103,9 @@ class RuneGeneratorWindow(QMainWindow):
             15
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # TITLE
-        # ----------------------------------------------------
+        # ====================================================
 
         title = QLabel(
             "Elder Futhark Rune Formula Generator"
@@ -95,9 +127,9 @@ class RuneGeneratorWindow(QMainWindow):
             title
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # SUBTITLE
-        # ----------------------------------------------------
+        # ====================================================
 
         subtitle = QLabel(
             "Generate unique random formulas using "
@@ -108,20 +140,29 @@ class RuneGeneratorWindow(QMainWindow):
             Qt.AlignCenter
         )
 
+        subtitle.setWordWrap(
+            True
+        )
+
         main_layout.addWidget(
             subtitle
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # FORMULA CONTROLS
-        # ----------------------------------------------------
+        # ====================================================
 
         controls_layout = QHBoxLayout()
 
-        controls_layout.addWidget(
-            QLabel("Formula Length:")
+        formula_length_label = QLabel(
+            "Formula Length:"
         )
 
+        controls_layout.addWidget(
+            formula_length_label
+        )
+
+        # Dropdown for choosing the number of runes.
         self.rune_count_combo = QComboBox()
 
         self.rune_count_combo.addItems([
@@ -135,8 +176,10 @@ class RuneGeneratorWindow(QMainWindow):
             self.rune_count_combo
         )
 
+        # Push the Generate button to the right.
         controls_layout.addStretch()
 
+        # Generate button.
         self.generate_button = QPushButton(
             "Generate Formula"
         )
@@ -153,9 +196,9 @@ class RuneGeneratorWindow(QMainWindow):
             controls_layout
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # SEPARATOR
-        # ----------------------------------------------------
+        # ====================================================
 
         separator = QFrame()
 
@@ -163,13 +206,17 @@ class RuneGeneratorWindow(QMainWindow):
             QFrame.HLine
         )
 
+        separator.setFrameShadow(
+            QFrame.Sunken
+        )
+
         main_layout.addWidget(
             separator
         )
 
-        # ----------------------------------------------------
-        # CURRENT FORMULA
-        # ----------------------------------------------------
+        # ====================================================
+        # CURRENT FORMULA TITLE
+        # ====================================================
 
         formula_title = QLabel(
             "Current Formula"
@@ -182,6 +229,10 @@ class RuneGeneratorWindow(QMainWindow):
         main_layout.addWidget(
             formula_title
         )
+
+        # ====================================================
+        # CURRENT FORMULA DISPLAY
+        # ====================================================
 
         self.formula_display = QLabel(
             "Generate a formula to begin"
@@ -206,6 +257,7 @@ class RuneGeneratorWindow(QMainWindow):
             90
         )
 
+        # Used by styles.qss.
         self.formula_display.setObjectName(
             "formulaDisplay"
         )
@@ -214,55 +266,83 @@ class RuneGeneratorWindow(QMainWindow):
             self.formula_display
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # FORMULA ACTION BUTTONS
-        # ----------------------------------------------------
+        # ====================================================
 
         action_layout = QHBoxLayout()
 
-        copy_button = QPushButton(
+        # ----------------------------------------------------
+        # COPY
+        # ----------------------------------------------------
+
+        self.copy_button = QPushButton(
             "Copy Formula"
         )
 
-        copy_button.clicked.connect(
+        self.copy_button.clicked.connect(
             self.copy_formula
         )
 
-        regenerate_button = QPushButton(
+        action_layout.addWidget(
+            self.copy_button
+        )
+
+        # ----------------------------------------------------
+        # REGENERATE
+        # ----------------------------------------------------
+
+        self.regenerate_button = QPushButton(
             "Regenerate"
         )
 
-        regenerate_button.clicked.connect(
+        self.regenerate_button.clicked.connect(
             self.generate_formula
         )
 
-        save_button = QPushButton(
-            "Save Formula"
+        action_layout.addWidget(
+            self.regenerate_button
         )
 
-        save_button.clicked.connect(
-            self.save_formula
+        # ----------------------------------------------------
+        # EXPORT TO TXT
+        # ----------------------------------------------------
+
+        self.export_button = QPushButton(
+            "Export to TXT"
+        )
+
+        self.export_button.clicked.connect(
+            self.export_formula
         )
 
         action_layout.addWidget(
-            copy_button
+            self.export_button
+        )
+
+        # ----------------------------------------------------
+        # SAVE TO COLLECTION
+        # ----------------------------------------------------
+
+        self.save_collection_button = QPushButton(
+            "Save to Collection"
+        )
+
+        self.save_collection_button.clicked.connect(
+            self.save_to_collection
         )
 
         action_layout.addWidget(
-            regenerate_button
-        )
-
-        action_layout.addWidget(
-            save_button
+            self.save_collection_button
         )
 
         main_layout.addLayout(
             action_layout
         )
 
-        # ----------------------------------------------------
-        # RUNE CARDS
-        # ----------------------------------------------------
+        # ====================================================
+        # SELECTED RUNES TITLE
+        # ====================================================
 
         rune_title = QLabel(
             "Selected Runes"
@@ -276,14 +356,20 @@ class RuneGeneratorWindow(QMainWindow):
             rune_title
         )
 
+        # ====================================================
+        # RUNE CARD SCROLL AREA
+        # ====================================================
+
         self.scroll_area = QScrollArea()
 
         self.scroll_area.setWidgetResizable(
             True
         )
 
+        # Container holds the rune cards.
         self.rune_container = QWidget()
 
+        # Grid organizes the rune cards.
         self.rune_grid = QGridLayout()
 
         self.rune_grid.setSpacing(
@@ -306,26 +392,18 @@ class RuneGeneratorWindow(QMainWindow):
             self.scroll_area
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # HISTORY HEADER
-        # ----------------------------------------------------
+        # ====================================================
 
         history_header = QHBoxLayout()
 
         history_title = QLabel(
-            "Formula History"
+            "Session History"
         )
 
         history_title.setObjectName(
             "sectionTitle"
-        )
-
-        clear_button = QPushButton(
-            "Clear History"
-        )
-
-        clear_button.clicked.connect(
-            self.clear_history
         )
 
         history_header.addWidget(
@@ -334,22 +412,35 @@ class RuneGeneratorWindow(QMainWindow):
 
         history_header.addStretch()
 
+        # Clear history button.
+        self.clear_history_button = QPushButton(
+            "Clear History"
+        )
+
+        self.clear_history_button.clicked.connect(
+            self.clear_history
+        )
+
         history_header.addWidget(
-            clear_button
+            self.clear_history_button
         )
 
         main_layout.addLayout(
             history_header
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # HISTORY DISPLAY
-        # ----------------------------------------------------
+        # ====================================================
 
         self.history_display = QTextEdit()
 
         self.history_display.setReadOnly(
             True
+        )
+
+        self.history_display.setPlaceholderText(
+            "Generated formulas will appear here..."
         )
 
         self.history_display.setMaximumHeight(
@@ -360,9 +451,9 @@ class RuneGeneratorWindow(QMainWindow):
             self.history_display
         )
 
-        # ----------------------------------------------------
-        # SET CENTRAL WIDGET
-        # ----------------------------------------------------
+        # ====================================================
+        # FINISH CENTRAL WIDGET
+        # ====================================================
 
         central_widget.setLayout(
             main_layout
@@ -378,6 +469,15 @@ class RuneGeneratorWindow(QMainWindow):
     # ========================================================
 
     def generate_formula(self):
+        """
+        Generate a new random formula using the
+        selected number of runes.
+        """
+
+        # Example:
+        #
+        # "5 Runes" -> 5
+        # "15 Runes" -> 15
 
         selected_option = (
             self.rune_count_combo.currentText()
@@ -387,26 +487,43 @@ class RuneGeneratorWindow(QMainWindow):
             selected_option.split()[0]
         )
 
-        # FormulaManager performs the random
-        # no-repeat selection.
-        self.current_runes = (
-            FormulaManager.generate_formula(
-                rune_count
-            )
-        )
+        try:
 
+            # FormulaManager uses random.sample(),
+            # which prevents duplicate runes.
+            self.current_runes = (
+                FormulaManager.generate_formula(
+                    rune_count
+                )
+            )
+
+        except ValueError as error:
+
+            QMessageBox.critical(
+                self,
+                "Generation Error",
+                str(error)
+            )
+
+            return
+
+        # Convert rune dictionaries into a
+        # displayable formula string.
         formula = (
             FormulaManager.get_formula_string(
                 self.current_runes
             )
         )
 
+        # Display the formula.
         self.formula_display.setText(
             formula
         )
 
+        # Create visual cards.
         self.display_rune_cards()
 
+        # Add formula to session history.
         self.add_to_history(
             formula
         )
@@ -417,24 +534,32 @@ class RuneGeneratorWindow(QMainWindow):
     # ========================================================
 
     def display_rune_cards(self):
+        """
+        Display each generated rune using the
+        reusable RuneCard widget.
+        """
 
+        # Remove old cards first.
         self.clear_rune_cards()
 
-        # Five cards per row.
+        # Display five rune cards per row.
         columns = 5
 
         for index, rune in enumerate(
             self.current_runes
         ):
 
+            # Determine the grid position.
             row = index // columns
             column = index % columns
 
+            # Create a RuneCard.
             rune_card = RuneCard(
                 rune,
                 index + 1
             )
 
+            # Add the card to the grid.
             self.rune_grid.addWidget(
                 rune_card,
                 row,
@@ -447,6 +572,9 @@ class RuneGeneratorWindow(QMainWindow):
     # ========================================================
 
     def clear_rune_cards(self):
+        """
+        Remove all currently displayed RuneCard widgets.
+        """
 
         while self.rune_grid.count():
 
@@ -456,7 +584,8 @@ class RuneGeneratorWindow(QMainWindow):
 
             widget = item.widget()
 
-            if widget:
+            if widget is not None:
+
                 widget.deleteLater()
 
 
@@ -465,6 +594,10 @@ class RuneGeneratorWindow(QMainWindow):
     # ========================================================
 
     def copy_formula(self):
+        """
+        Copy the current rune formula to the
+        operating system clipboard.
+        """
 
         if not self.current_runes:
 
@@ -482,7 +615,11 @@ class RuneGeneratorWindow(QMainWindow):
             )
         )
 
-        QApplication.clipboard().setText(
+        clipboard = (
+            QApplication.clipboard()
+        )
+
+        clipboard.setText(
             formula
         )
 
@@ -494,10 +631,14 @@ class RuneGeneratorWindow(QMainWindow):
 
 
     # ========================================================
-    # SAVE FORMULA
+    # EXPORT FORMULA TO TXT
     # ========================================================
 
-    def save_formula(self):
+    def export_formula(self):
+        """
+        Export the current formula and its rune
+        information to a normal text file.
+        """
 
         if not self.current_runes:
 
@@ -509,22 +650,26 @@ class RuneGeneratorWindow(QMainWindow):
 
             return
 
+        # Ask where the text file should be saved.
         filename, _ = QFileDialog.getSaveFileName(
             self,
-            "Save Rune Formula",
+            "Export Rune Formula",
             "rune_formula.txt",
             "Text Files (*.txt)"
         )
 
+        # User cancelled.
         if not filename:
             return
 
+        # Get formula string.
         formula = (
             FormulaManager.get_formula_string(
                 self.current_runes
             )
         )
 
+        # Get formatted rune information.
         details = (
             FormulaManager.get_formula_details(
                 self.current_runes
@@ -552,7 +697,16 @@ class RuneGeneratorWindow(QMainWindow):
                 )
 
                 file.write(
-                    "\n\nRune Details\n"
+                    "\n\n"
+                )
+
+                file.write(
+                    f"Rune Count: "
+                    f"{len(self.current_runes)}\n"
+                )
+
+                file.write(
+                    "\nRune Details\n"
                 )
 
                 file.write(
@@ -565,8 +719,70 @@ class RuneGeneratorWindow(QMainWindow):
 
             QMessageBox.information(
                 self,
-                "Saved",
-                "Formula saved successfully."
+                "Export Complete",
+                "The formula was exported successfully."
+            )
+
+        except OSError as error:
+
+            QMessageBox.critical(
+                self,
+                "Export Error",
+                str(error)
+            )
+
+
+    # ========================================================
+    # SAVE FORMULA TO COLLECTION
+    # ========================================================
+
+    def save_to_collection(self):
+        """
+        Save the current formula permanently to
+        saved/formulas.json.
+        """
+
+        if not self.current_runes:
+
+            QMessageBox.information(
+                self,
+                "No Formula",
+                "Generate a rune formula first."
+            )
+
+            return
+
+        # Ask the user to give the formula a name.
+        name, accepted = QInputDialog.getText(
+            self,
+            "Save Formula",
+            "Formula name:"
+        )
+
+        # User pressed Cancel.
+        if not accepted:
+            return
+
+        # Remove whitespace from beginning/end.
+        name = name.strip()
+
+        # Give unnamed formulas a default name.
+        if not name:
+
+            name = "Unnamed Formula"
+
+        try:
+
+            self.saved_formula_manager.save_formula(
+                name,
+                self.current_runes
+            )
+
+            QMessageBox.information(
+                self,
+                "Formula Saved",
+                f'"{name}" was added to your '
+                f"saved formula collection."
             )
 
         except OSError as error:
@@ -579,39 +795,41 @@ class RuneGeneratorWindow(QMainWindow):
 
 
     # ========================================================
-    # HISTORY
+    # ADD TO SESSION HISTORY
     # ========================================================
 
-    def add_to_history(
-        self,
-        formula
-    ):
+    def add_to_history(self, formula):
+        """
+        Send the generated formula to HistoryManager.
+        """
 
-        current_time = datetime.now().strftime(
-            "%H:%M:%S"
-        )
-
-        history_entry = (
-            f"[{current_time}] "
-            f"{len(self.current_runes)} Runes: "
-            f"{formula}"
-        )
-
-        self.formula_history.append(
-            history_entry
+        self.history_manager.add_formula(
+            self.current_runes,
+            formula
         )
 
         self.update_history_display()
 
 
-    def update_history_display(self):
+    # ========================================================
+    # UPDATE HISTORY DISPLAY
+    # ========================================================
 
-        self.history_display.setPlainText(
-            "\n".join(
-                self.formula_history
-            )
+    def update_history_display(self):
+        """
+        Retrieve formatted history from HistoryManager
+        and display it.
+        """
+
+        history_text = (
+            self.history_manager.get_formatted_history()
         )
 
+        self.history_display.setPlainText(
+            history_text
+        )
+
+        # Automatically scroll to the newest entry.
         scrollbar = (
             self.history_display.verticalScrollBar()
         )
@@ -621,94 +839,16 @@ class RuneGeneratorWindow(QMainWindow):
         )
 
 
-    def clear_history(self):
+    # ========================================================
+    # CLEAR SESSION HISTORY
+    # ========================================================
 
-        self.formula_history.clear()
+    def clear_history(self):
+        """
+        Remove all formula history from the
+        current application session.
+        """
+
+        self.history_manager.clear_history()
 
         self.history_display.clear()
-
-
-    # ========================================================
-    # APPLICATION STYLE
-    # ========================================================
-
-    def apply_styles(self):
-
-        self.setStyleSheet(
-            """
-            QMainWindow {
-                background-color: #141414;
-            }
-
-            QWidget {
-                color: #eeeeee;
-                font-size: 15px;
-            }
-
-            QLabel#sectionTitle {
-                font-size: 18px;
-                font-weight: bold;
-            }
-
-            QLabel#formulaDisplay {
-                background-color: #202020;
-                border: 1px solid #505050;
-                border-radius: 10px;
-                padding: 15px;
-            }
-
-            QComboBox {
-                background-color: #282828;
-                border: 1px solid #555555;
-                border-radius: 6px;
-                padding: 8px;
-                min-width: 140px;
-            }
-
-            QComboBox:hover {
-                border: 1px solid #888888;
-            }
-
-            QPushButton {
-                background-color: #303030;
-                border: 1px solid #555555;
-                border-radius: 7px;
-                padding: 9px 15px;
-                font-weight: bold;
-            }
-
-            QPushButton:hover {
-                background-color: #424242;
-                border: 1px solid #888888;
-            }
-
-            QPushButton:pressed {
-                background-color: #202020;
-            }
-
-            QTextEdit {
-                background-color: #202020;
-                border: 1px solid #505050;
-                border-radius: 8px;
-                padding: 8px;
-            }
-
-            QScrollArea {
-                background-color: transparent;
-                border: none;
-            }
-
-            QFrame#runeCard {
-                background-color: #242424;
-                border: 1px solid #505050;
-                border-radius: 10px;
-                min-width: 150px;
-                min-height: 180px;
-            }
-
-            QFrame#runeCard:hover {
-                background-color: #303030;
-                border: 1px solid #888888;
-            }
-            """
-        )

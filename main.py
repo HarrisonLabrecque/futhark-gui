@@ -2,10 +2,53 @@
 
 import sys
 
+from pathlib import Path
+
 from PySide6.QtWidgets import QApplication
 
 from gui.main_window import RuneGeneratorWindow
 
+
+# ============================================================
+# LOAD APPLICATION STYLES
+# ============================================================
+
+def load_styles(app):
+
+    # Find project directory.
+    project_root = Path(__file__).resolve().parent
+
+    # Find QSS stylesheet.
+    style_file = (
+        project_root
+        / "resources"
+        / "styles.qss"
+    )
+
+    # Make sure the stylesheet exists.
+    if not style_file.exists():
+
+        print(
+            "Warning: styles.qss was not found."
+        )
+
+        return
+
+    # Read stylesheet.
+    with open(
+        style_file,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        app.setStyleSheet(
+            file.read()
+        )
+
+
+# ============================================================
+# MAIN
+# ============================================================
 
 def main():
 
@@ -14,13 +57,18 @@ def main():
         sys.argv
     )
 
-    # Create the main application window.
+    # Apply external QSS styling.
+    load_styles(
+        app
+    )
+
+    # Create main window.
     window = RuneGeneratorWindow()
 
-    # Display the GUI.
+    # Display main window.
     window.show()
 
-    # Start the Qt event loop.
+    # Start Qt event loop.
     sys.exit(
         app.exec()
     )
