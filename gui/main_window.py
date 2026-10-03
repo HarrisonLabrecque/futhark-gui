@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
     QPushButton,
+    QLabel,
     QVBoxLayout,
     QHBoxLayout,
     QStackedWidget
@@ -11,22 +12,21 @@ from PySide6.QtWidgets import (
 
 from gui.generator_page import GeneratorPage
 from gui.rune_library import RuneLibrary
+from gui.saved_formulas import SavedFormulasPage
 
 
 class RuneGeneratorWindow(QMainWindow):
     """
     Main application window.
 
-    Handles navigation between the different
-    application pages.
+    Controls navigation between:
+        - Generator
+        - Rune Library
+        - Saved Formulas
     """
 
     def __init__(self):
         super().__init__()
-
-        # ----------------------------------------------------
-        # WINDOW SETTINGS
-        # ----------------------------------------------------
 
         self.setWindowTitle(
             "Elder Futhark Rune Generator"
@@ -46,13 +46,8 @@ class RuneGeneratorWindow(QMainWindow):
 
     def setup_ui(self):
 
-        # Main central widget.
         central_widget = QWidget()
 
-        # Main horizontal layout.
-        #
-        # Sidebar goes on the left.
-        # Pages go on the right.
         main_layout = QHBoxLayout()
 
         main_layout.setContentsMargins(
@@ -77,7 +72,7 @@ class RuneGeneratorWindow(QMainWindow):
         )
 
         sidebar.setFixedWidth(
-            200
+            210
         )
 
         sidebar_layout = QVBoxLayout()
@@ -94,7 +89,23 @@ class RuneGeneratorWindow(QMainWindow):
         )
 
         # ----------------------------------------------------
-        # GENERATOR BUTTON
+        # APPLICATION TITLE
+        # ----------------------------------------------------
+
+        sidebar_title = QLabel(
+            "Elder Futhark"
+        )
+
+        sidebar_title.setObjectName(
+            "sidebarTitle"
+        )
+
+        sidebar_layout.addWidget(
+            sidebar_title
+        )
+
+        # ----------------------------------------------------
+        # GENERATOR
         # ----------------------------------------------------
 
         self.generator_button = QPushButton(
@@ -114,7 +125,7 @@ class RuneGeneratorWindow(QMainWindow):
         )
 
         # ----------------------------------------------------
-        # RUNE LIBRARY BUTTON
+        # RUNE LIBRARY
         # ----------------------------------------------------
 
         self.library_button = QPushButton(
@@ -133,45 +144,66 @@ class RuneGeneratorWindow(QMainWindow):
             self.library_button
         )
 
-        # Push navigation buttons toward the top.
+        # ----------------------------------------------------
+        # SAVED FORMULAS
+        # ----------------------------------------------------
+
+        self.saved_button = QPushButton(
+            "Saved Formulas"
+        )
+
+        self.saved_button.setObjectName(
+            "navigationButton"
+        )
+
+        self.saved_button.clicked.connect(
+            self.show_saved_formulas
+        )
+
+        sidebar_layout.addWidget(
+            self.saved_button
+        )
+
         sidebar_layout.addStretch()
 
         sidebar.setLayout(
             sidebar_layout
         )
 
-        # Add sidebar to main window.
         main_layout.addWidget(
             sidebar
         )
 
         # ====================================================
-        # PAGE SYSTEM
+        # PAGE STACK
         # ====================================================
 
         self.page_stack = QStackedWidget()
 
-        # ----------------------------------------------------
-        # GENERATOR PAGE
-        # ----------------------------------------------------
-
+        # Generator page.
         self.generator_page = GeneratorPage()
 
         self.page_stack.addWidget(
             self.generator_page
         )
 
-        # ----------------------------------------------------
-        # RUNE LIBRARY PAGE
-        # ----------------------------------------------------
-
+        # Rune Library page.
         self.rune_library_page = RuneLibrary()
 
         self.page_stack.addWidget(
             self.rune_library_page
         )
 
-        # Display Generator by default.
+        # Saved Formulas page.
+        self.saved_formulas_page = (
+            SavedFormulasPage()
+        )
+
+        self.page_stack.addWidget(
+            self.saved_formulas_page
+        )
+
+        # Generator is the default page.
         self.page_stack.setCurrentWidget(
             self.generator_page
         )
@@ -179,10 +211,6 @@ class RuneGeneratorWindow(QMainWindow):
         main_layout.addWidget(
             self.page_stack
         )
-
-        # ====================================================
-        # FINISH WINDOW
-        # ====================================================
 
         central_widget.setLayout(
             main_layout
@@ -194,13 +222,10 @@ class RuneGeneratorWindow(QMainWindow):
 
 
     # ========================================================
-    # SHOW GENERATOR
+    # GENERATOR PAGE
     # ========================================================
 
     def show_generator(self):
-        """
-        Switch to the Rune Generator page.
-        """
 
         self.page_stack.setCurrentWidget(
             self.generator_page
@@ -208,14 +233,26 @@ class RuneGeneratorWindow(QMainWindow):
 
 
     # ========================================================
-    # SHOW RUNE LIBRARY
+    # RUNE LIBRARY PAGE
     # ========================================================
 
     def show_rune_library(self):
-        """
-        Switch to the Rune Library page.
-        """
 
         self.page_stack.setCurrentWidget(
             self.rune_library_page
+        )
+
+
+    # ========================================================
+    # SAVED FORMULAS PAGE
+    # ========================================================
+
+    def show_saved_formulas(self):
+
+        # Refresh first so formulas saved from the
+        # Generator page immediately appear.
+        self.saved_formulas_page.refresh_formulas()
+
+        self.page_stack.setCurrentWidget(
+            self.saved_formulas_page
         )
