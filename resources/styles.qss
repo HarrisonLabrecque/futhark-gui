@@ -1,185 +1,40 @@
 /* ==========================================================
-   ELDER FUTHARK GENERATOR
-   GLOBAL STYLESHEET
+   SIDEBAR
    ========================================================== */
 
+QWidget#sidebar {
+    background-color: #1c1c1c;
 
-/* ----------------------------------------------------------
-   MAIN WINDOW
-   ---------------------------------------------------------- */
-
-QMainWindow {
-    background-color: #141414;
+    border-right: 1px solid #404040;
 }
 
 
 /* ----------------------------------------------------------
-   GENERAL WIDGETS
+   NAVIGATION BUTTONS
    ---------------------------------------------------------- */
 
-QWidget {
-    color: #eeeeee;
-    font-size: 15px;
-    background-color: #141414;
-}
+QPushButton#navigationButton {
+    background-color: #292929;
 
-
-/* ----------------------------------------------------------
-   SECTION TITLES
-   ---------------------------------------------------------- */
-
-QLabel#sectionTitle {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-
-/* ----------------------------------------------------------
-   CURRENT FORMULA DISPLAY
-   ---------------------------------------------------------- */
-
-QLabel#formulaDisplay {
-    background-color: #202020;
-
-    border: 1px solid #505050;
-    border-radius: 10px;
-
-    padding: 15px;
-}
-
-
-/* ----------------------------------------------------------
-   COMBO BOX
-   ---------------------------------------------------------- */
-
-QComboBox {
-    background-color: #282828;
-
-    border: 1px solid #555555;
-    border-radius: 6px;
-
-    padding: 8px;
-
-    min-width: 140px;
-}
-
-
-QComboBox:hover {
-    border: 1px solid #888888;
-}
-
-
-QComboBox QAbstractItemView {
-    background-color: #282828;
-
-    color: #eeeeee;
-
-    selection-background-color: #444444;
-}
-
-
-/* ----------------------------------------------------------
-   BUTTONS
-   ---------------------------------------------------------- */
-
-QPushButton {
-    background-color: #303030;
-
-    border: 1px solid #555555;
+    border: 1px solid #444444;
     border-radius: 7px;
 
-    padding: 9px 15px;
+    padding: 12px;
 
+    font-size: 15px;
     font-weight: bold;
+
+    text-align: left;
 }
 
 
-QPushButton:hover {
-    background-color: #424242;
+QPushButton#navigationButton:hover {
+    background-color: #3a3a3a;
 
-    border: 1px solid #888888;
+    border: 1px solid #666666;
 }
 
 
-QPushButton:pressed {
+QPushButton#navigationButton:pressed {
     background-color: #202020;
-}
-
-
-/* ----------------------------------------------------------
-   TEXT EDIT
-   ---------------------------------------------------------- */
-
-QTextEdit {
-    background-color: #202020;
-
-    border: 1px solid #505050;
-    border-radius: 8px;
-
-    padding: 8px;
-}
-
-
-/* ----------------------------------------------------------
-   SCROLL AREA
-   ---------------------------------------------------------- */
-
-QScrollArea {
-    background-color: transparent;
-
-    border: none;
-}
-
-
-QScrollArea > QWidget > QWidget {
-    background-color: #141414;
-}
-
-
-/* ----------------------------------------------------------
-   RUNE CARDS
-   ---------------------------------------------------------- */
-
-QFrame#runeCard {
-    background-color: #242424;
-
-    border: 1px solid #505050;
-    border-radius: 10px;
-
-    min-width: 150px;
-    min-height: 180px;
-}
-
-
-QFrame#runeCard:hover {
-    background-color: #303030;
-
-    border: 1px solid #888888;
-}
-
-
-/* ----------------------------------------------------------
-   SCROLL BAR
-   ---------------------------------------------------------- */
-
-QScrollBar:vertical {
-    background-color: #202020;
-
-    width: 12px;
-
-    border-radius: 6px;
-}
-
-
-QScrollBar::handle:vertical {
-    background-color: #555555;
-
-    min-height: 30px;
-
-    border-radius: 6px;
-}
-
-
-QScrollBar::handle:vertical:hover {
-    background-color: #777777;
 }

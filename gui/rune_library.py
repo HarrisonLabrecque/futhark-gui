@@ -16,8 +16,10 @@ from gui.rune_card import RuneCard
 
 class RuneLibrary(QWidget):
     """
-    Displays all 24 Elder Futhark runes
-    inside a scrollable library.
+    Rune Library page.
+
+    Displays all 24 Elder Futhark runes using
+    reusable RuneCard widgets.
     """
 
     def __init__(self, parent=None):
@@ -27,7 +29,7 @@ class RuneLibrary(QWidget):
 
 
     # ========================================================
-    # BUILD LIBRARY
+    # BUILD USER INTERFACE
     # ========================================================
 
     def setup_ui(self):
@@ -35,15 +37,19 @@ class RuneLibrary(QWidget):
         main_layout = QVBoxLayout()
 
         main_layout.setContentsMargins(
-            20,
-            20,
-            20,
-            20
+            25,
+            25,
+            25,
+            25
         )
 
-        # ----------------------------------------------------
+        main_layout.setSpacing(
+            15
+        )
+
+        # ====================================================
         # TITLE
-        # ----------------------------------------------------
+        # ====================================================
 
         title = QLabel(
             "Elder Futhark Rune Library"
@@ -54,7 +60,7 @@ class RuneLibrary(QWidget):
         )
 
         title_font = QFont()
-        title_font.setPointSize(22)
+        title_font.setPointSize(25)
         title_font.setBold(True)
 
         title.setFont(
@@ -65,14 +71,14 @@ class RuneLibrary(QWidget):
             title
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # DESCRIPTION
-        # ----------------------------------------------------
+        # ====================================================
 
         description = QLabel(
             "Browse all 24 Elder Futhark runes, "
-            "their transliterations, and their "
-            "modern/common interpretive keywords."
+            "their transliterations, and modern/common "
+            "interpretive keywords."
         )
 
         description.setAlignment(
@@ -87,27 +93,28 @@ class RuneLibrary(QWidget):
             description
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # SCROLL AREA
-        # ----------------------------------------------------
+        # ====================================================
 
-        scroll_area = QScrollArea()
+        self.scroll_area = QScrollArea()
 
-        scroll_area.setWidgetResizable(
+        self.scroll_area.setWidgetResizable(
             True
         )
 
-        container = QWidget()
+        self.rune_container = QWidget()
 
-        rune_grid = QGridLayout()
+        self.rune_grid = QGridLayout()
 
-        rune_grid.setSpacing(
+        self.rune_grid.setSpacing(
             12
         )
 
-        # Display four rune cards per row.
+        # Four rune cards per row.
         columns = 4
 
+        # Create a card for all 24 runes.
         for index, rune in enumerate(
             ELDER_FUTHARK
         ):
@@ -115,27 +122,27 @@ class RuneLibrary(QWidget):
             row = index // columns
             column = index % columns
 
-            card = RuneCard(
+            rune_card = RuneCard(
                 rune,
                 index + 1
             )
 
-            rune_grid.addWidget(
-                card,
+            self.rune_grid.addWidget(
+                rune_card,
                 row,
                 column
             )
 
-        container.setLayout(
-            rune_grid
+        self.rune_container.setLayout(
+            self.rune_grid
         )
 
-        scroll_area.setWidget(
-            container
+        self.scroll_area.setWidget(
+            self.rune_container
         )
 
         main_layout.addWidget(
-            scroll_area
+            self.scroll_area
         )
 
         self.setLayout(
