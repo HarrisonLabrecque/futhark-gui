@@ -10,31 +10,61 @@ from gui.main_window import RuneGeneratorWindow
 
 
 # ============================================================
-# LOAD APPLICATION STYLES
+# RESOURCE PATH
+# ============================================================
+
+def resource_path(relative_path):
+    """
+    Return the correct resource path.
+
+    Works when:
+        - Running normally with Python.
+        - Running as a PyInstaller executable.
+    """
+
+    # PyInstaller stores bundled resources inside
+    # a temporary/internal bundle directory.
+    if hasattr(sys, "_MEIPASS"):
+
+        base_path = Path(
+            sys._MEIPASS
+        )
+
+    else:
+
+        # Normal Python development environment.
+        base_path = Path(
+            __file__
+        ).resolve().parent
+
+    return (
+        base_path
+        / relative_path
+    )
+
+
+# ============================================================
+# LOAD STYLESHEET
 # ============================================================
 
 def load_styles(app):
+    """
+    Load the external QSS application stylesheet.
+    """
 
-    # Find project directory.
-    project_root = Path(__file__).resolve().parent
-
-    # Find QSS stylesheet.
-    style_file = (
-        project_root
-        / "resources"
-        / "styles.qss"
+    style_file = resource_path(
+        "resources/styles.qss"
     )
 
-    # Make sure the stylesheet exists.
     if not style_file.exists():
 
         print(
-            "Warning: styles.qss was not found."
+            f"Warning: stylesheet not found: "
+            f"{style_file}"
         )
 
         return
 
-    # Read stylesheet.
     with open(
         style_file,
         "r",
@@ -57,7 +87,7 @@ def main():
         sys.argv
     )
 
-    # Apply external QSS styling.
+    # Apply external stylesheet.
     load_styles(
         app
     )
@@ -65,7 +95,7 @@ def main():
     # Create main window.
     window = RuneGeneratorWindow()
 
-    # Display main window.
+    # Display application.
     window.show()
 
     # Start Qt event loop.
